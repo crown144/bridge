@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>用户列表</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>密码</th>
+                <th>所属企业</th>
+                <th>权限</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in datalist %}
+            <tr>
+                <td>{{item.id}}</td>
+                <td>{{item.username}}</td>
+                <td>{{item.password}}</td>
+                <td>{{item.enterprise_name}}</td>
+                <td>{{item.get_permission_display}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
