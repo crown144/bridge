@@ -10,18 +10,19 @@ from django.apps import apps
 
 #增加条目
 def insert_data_from_json(json_data):
-    for model_name, data_list in json_data.items():
+    print(type(json_data))
+    print(json_data)
+    for model_name, data_dict in json_data.items():
         try:
             model_class = apps.get_model(app_label='app01', model_name=model_name)
         except LookupError:
             print(f"Model {model_name} not found.")
             continue
-        
-        for data in data_list:
-            instance = model_class()
-            for key, value in data.items():
-                setattr(instance, key, value)
-            instance.save()
+        instance = model_class()
+        for key, value in data_dict.items():
+            setattr(instance, key, value)
+        instance.save()
+
 
 
 #jwt token加密
@@ -110,14 +111,22 @@ def datalist(request):
             except:
                 return HttpResponse(json.dumps('未查询到相关数据'))
         elif(permission == 'Admin'):
-            return HttpResponse('1')
-        return HttpResponse('OK')
+            try:
+                bridge = models.App01BasicInfo.objects.all()
+                result = []
+                for i in bridge:
+                    result.append(model_to_dict(i))
+                return HttpResponse(json.dumps(result), content_type="application/json")
+            except:
+                return HttpResponse(json.dumps('未查询到相关数据'))
+        elif(permission == 'Client'):
+            return HttpResponse(json.dumps('权限不足'))
 
 '''
 {
-'basic_info':{'桥梁id','定期检查时间','工作时间','年日均交通量','建成时间','上下行','是否预应力桥梁','上传用户'}
-
-
+'App01BasicInfo':{'桥梁id','定期检查时间','工作时间','年日均交通量','建成时间','上下行','是否预应力桥梁','上传用户'},
+‘BeamBaseplateConcreteCracking’:{'bridge_id','梁体底板混凝土破损跨径','平均数量','平均面积_m2_field','总面积_m2_field','数量','最大面积_m2_field'},
+'BeamBaseplateXCracking':{'bridge_id','梁体底板横向裂缝跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','数量','最大宽度_mm_field','最大长度占比','每延米数量','长度总和_cm_field'},
 
 
 
@@ -128,4 +137,4 @@ def add_datalist(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         insert_data_from_json(data)
-        return HttpResponse('1')
+        return HttpResponse(json.dumps({'status':'success'}))
