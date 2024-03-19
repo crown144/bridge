@@ -100,14 +100,19 @@ def datalist(request):
         http_authori = request.META.get('HTTP_AUTHORIZATION')
         decoded_jwt = decode_jwt_token(http_authori)
         username = decoded_jwt['data']['username']
+        print(username)
         user = models.user_info.objects.get(username = username)
         userinfo_dict=dict(models.user_info.Permission_CHOICES)
         permission = userinfo_dict[user.permission]
         if(permission == 'Enterprise'):
             try:
-                bridge = models.App01BasicInfo.objects.get(上传用户=username)
-                result= model_to_dict(bridge)
-                return HttpResponse(json.dumps(result), content_type="application/json")
+                bridge_list = models.App01BasicInfo.objects.filter(上传用户 = username)
+                results_list = []
+                for bridge in bridge_list:
+                    result = model_to_dict(bridge)
+                    results_list.append(result)
+                json_response = json.dumps(results_list)
+                return HttpResponse(json_response, content_type="application/json")
                 #return HttpResponse('Yes')
             except:
                 return HttpResponse(json.dumps('未查询到相关数据'))
