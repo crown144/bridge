@@ -9,7 +9,7 @@ from django.forms.models import model_to_dict
 from django.apps import apps
 
 #增加条目
-def insert_data_from_json(json_data):
+def insert_data_from_json(json_data,username):
     print(type(json_data))
     print(json_data)
     for model_name, data_dict in json_data.items():
@@ -18,6 +18,7 @@ def insert_data_from_json(json_data):
         except LookupError:
             print(f"Model {model_name} not found.")
             continue
+        data_dict['上传用户'] = username
         instance = model_class()
         for key, value in data_dict.items():
             setattr(instance, key, value)
@@ -123,18 +124,32 @@ def datalist(request):
             return HttpResponse(json.dumps('权限不足'))
 
 '''
+header里Authorization里加jwt token
+body:
 {
-'App01BasicInfo':{'桥梁id','定期检查时间','工作时间','年日均交通量','建成时间','上下行','是否预应力桥梁','上传用户'},
+'App01BasicInfo':{'桥梁id','定期检查时间','工作时间','年日均交通量','建成时间','上下行','是否预应力桥梁'},
 ‘BeamBaseplateConcreteCracking’:{'bridge_id','梁体底板混凝土破损跨径','平均数量','平均面积_m2_field','总面积_m2_field','数量','最大面积_m2_field'},
 'BeamBaseplateXCracking':{'bridge_id','梁体底板横向裂缝跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','数量','最大宽度_mm_field','最大长度占比','每延米数量','长度总和_cm_field'},
-
-
-
+'BeamBaseplateYCracking':{'bridge_id','梁体底板纵向裂缝跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','数量','最大宽度_mm_field','最大长度占比','长度总和_cm_field'},
+'BeamSteelCorrosion':{'bridge_id','梁体钢筋锈蚀跨径','平均数量','平均长度_m_field','数量','最大长度_m_field','长度总和_m_field'},
+'BeamWebplateConcreteCracking':{'bridge_id','梁体腹板混凝土破损跨径','平均数量','平均面积_m2_field','总面积_m2_field','数量','最大面积_m2_field'},
+'BeamWebplateZCracking':{'bridge_id','梁体腹板竖向裂缝跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','数量','最大宽度_mm_field','最大长度占比','长度总和_cm_field'},
+'BeamWingplateXCracking':{'bridge_id','梁体翼板横向裂缝跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','平均间距','数量','最大宽度_mm_field','最大长度_cm_field','长度总和_cm_field'},
+'BearingCracking':{'bridge_id','支座开裂跨径','宽度总和_mm_field','平均宽度_mm_field','平均数量','平均长度_cm_field','数量','最大宽度_mm_field','最大长度_cm_field','长度总和_cm_field'},
+'BearingDeformation':{'bridge_id','支座变形跨径','平均数量','数量'},
+'BearingHanging':{'bridge_id','支座脱空跨径','平均数量','数量'},
+'BridgeGrading':{'bridge_id','桥梁等级'},
+'ConcreteBreakage':{'bridge_id','缩缝混凝土开裂跨径','平均数量','平均面积_m2_field','总面积_m2_field','数量','最大面积_m2_field'},
+'PierCracking':{'bridge_id','墩台裂缝跨径','宽度总和_m_field','平均宽度_m_field','平均数量','平均长度_cm_field','数量','最大宽度_m_field','最大长度_cm_field','长度总和_cm_field'},
+'PierSteelCorrosion':{'bridge_id','墩台钢筋腐蚀跨径','平均数量','平均长度_m_field','数量','最大长度_m_field','长度总和_m_field'}
 }
 '''
 @csrf_exempt
 def add_datalist(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        insert_data_from_json(data)
+        http_authori = request.META.get('HTTP_AUTHORIZATION')
+        decoded_jwt = decode_jwt_token(http_authori)
+        username = decoded_jwt['data']['username']
+        insert_data_from_json(data,username)
         return HttpResponse(json.dumps({'status':'success'}))
