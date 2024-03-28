@@ -7,11 +7,14 @@ from datetime import datetime,timedelta
 from bridge import settings
 from django.forms.models import model_to_dict
 from django.apps import apps
+import os,sys
+sys.path.append("..")
+from algorithm import gdbt
 
 #增加条目
 def insert_data_from_json(json_data,username):
-    print(type(json_data))
-    print(json_data)
+    #print(type(json_data))
+    #print(json_data)
     for model_name, data_dict in json_data.items():
         try:
             model_class = apps.get_model(app_label='app01', model_name=model_name)
@@ -100,12 +103,13 @@ def datalist(request):
         http_authori = request.META.get('HTTP_AUTHORIZATION')
         decoded_jwt = decode_jwt_token(http_authori)
         username = decoded_jwt['data']['username']
-        print(username)
+        #print(username)
         user = models.user_info.objects.get(username = username)
         userinfo_dict=dict(models.user_info.Permission_CHOICES)
         permission = userinfo_dict[user.permission]
         if(permission == 'Enterprise'):
             try:
+                #多条查询要用filter
                 bridge_list = models.App01BasicInfo.objects.filter(上传用户 = username)
                 results_list = []
                 for bridge in bridge_list:
@@ -158,3 +162,77 @@ def add_datalist(request):
         username = decoded_jwt['data']['username']
         insert_data_from_json(data,username)
         return HttpResponse(json.dumps({'status':'success'}))
+    
+### 在请求头里Authorization里加jwt token
+### body:
+### {
+###     'bridge_id': 'xxx'}
+### }
+@csrf_exempt
+def delete_datalist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        http_authori = request.META.get('HTTP_AUTHORIZATION')
+        decoded_jwt = decode_jwt_token(http_authori)
+        username = decoded_jwt['data']['username']
+        userinfo = models.user_info.objects.get(username = username)
+        bridgeinfo = models.App01BasicInfo.objects.get(桥梁id = data['bridge_id'])
+        
+        userinfo_dict=dict(models.user_info.Permission_CHOICES)
+        permission = userinfo_dict[userinfo.permission]
+        if(permission == 'Admin' or username == bridgeinfo.上传用户):
+            models.App01BasicInfo.objects.filter(桥梁id = data['bridge_id']).delete()
+            return HttpResponse(json.dumps({'status':'success'}))
+        else:
+            return HttpResponse(json.dumps({'status':'无权执行此操作'},ensure_ascii=False))
+        
+
+### 在请求头里Authorization里加jwt token
+### body:
+### {
+###     'bridge_id': 'xxx',
+###     '要修改的数据表名':{'要修改的字段名':'要修改的值'}
+### }
+@csrf_exempt
+def update_datalist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        http_authori = request.META.get('HTTP_AUTHORIZATION')
+        decoded_jwt = decode_jwt_token(http_authori)
+        username = decoded_jwt['data']['username']
+        userinfo = models.user_info.objects.get(username = username)
+        userinfo_dict=dict(models.user_info.Permission_CHOICES)
+        permission = userinfo_dict[userinfo.permission]
+        bridgeinfo = models.App01BasicInfo.objects.get(桥梁id = data['bridge_id'])
+        if(permission == 'Admin' or username == bridgeinfo.上传用户):
+            for model_name, data_dict in data.items():
+                print(data_dict)
+                try:
+                    model_class = apps.get_model(app_label='app01', model_name=model_name)
+                except LookupError:
+                    print(f"Model {model_name} not found.")
+                    continue
+                #获取要修改的数据表的实例,不止是app01basicinfo
+                try:
+                    revise_table = model_class.objects.get(桥梁id = data['bridge_id'])
+                    print(revise_table)
+                except:
+                    revise_table = model_class.objects.get(bridge_id = data['bridge_id'])
+                    print(revise_table)
+                for key, value in data_dict.items():
+                    setattr(revise_table, key, value)
+                revise_table.save()
+            return HttpResponse(json.dumps({'status':'success'}))
+        else:
+            return HttpResponse(json.dumps({'status':'无权执行此操作'},ensure_ascii=False))
+        
+#传入机器算法模型
+#从request.body中获取json数据转化为一个dict，将这个dict传入算法模型
+#json格式见test.json
+@csrf_exempt
+def assess(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        #print(data)
+        result = gdbt.predict(data)
+        return HttpResponse(json.dumps(result))

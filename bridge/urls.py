@@ -24,4 +24,7 @@ urlpatterns = [
     path('register/',views.register),
     path('datalist/',views.datalist),
     path('add_datalist/',views.add_datalist),
+    path('delete_datalist/',views.delete_datalist),
+    path('update_datalist/',views.update_datalist),
+    path('assess/',views.assess),
 ]

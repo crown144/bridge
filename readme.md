@@ -38,3 +38,7 @@
 	"PierSteelCorrosion":{"bridge_id","墩台钢筋腐蚀跨径","平均数量","平均长度_m_field","数量","最大长度_m_field","长度总和_m_field"}
 }
 ```
+
+### 修改桥梁信息
+向localhost:8080/update/发送post请求，在请求头里Authorization里加jwt token
+请求体包含15个表及其所有属性，没有的值传null
