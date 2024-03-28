@@ -16,7 +16,7 @@
 向localhost:8080/datalist/发送请求，在请求头里Authorization里加jwt token
 
 ### 新增桥梁信息
-向localhost:8080/add/发送post请求，在请求头里Authorization里加jwt token
+向localhost:8080/add_datalist/发送post请求，在请求头里Authorization里加jwt token
 请求体包含15个表及其所有属性，没有的值传null
 例如：
 ```json
@@ -40,5 +40,32 @@
 ```
 
 ### 修改桥梁信息
-向localhost:8080/update/发送post请求，在请求头里Authorization里加jwt token
-请求体包含15个表及其所有属性，没有的值传null
+向localhost:8080/update_datalist/发送post请求，在请求头里Authorization里加jwt token
+body示例如下:
+```
+{
+    "bridge_id": "xxx",
+	"要修改的表名": {
+		"要修改的字段1": "修改后的值",
+		"要修改的字段2": "修改后的值",
+		...
+	}
+}
+```
+
+
+### 删除桥梁信息
+向localhost:8080/delete_datalist/发送post请求，在请求头里Authorization里加jwt token
+body示例如下:
+```
+{
+	"bridge_id": "xxx"
+}
+```
+
+
+
+### 桥梁评估
+向localhost:8080/assess/发送post请求
+请求体为json,示例见algorithm文件夹下的test.json,
+注意：没有的值默认先传0，要求必须有424个字段,不需要id列
