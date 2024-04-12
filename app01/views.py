@@ -80,7 +80,6 @@ def register(request):
         username = data['username']
         password = data['password']
         enterprise_name = data['enterprise_name']
-        permission = data['permission']
     # phone = request.GET.get('phone')
     # insert into
     # user = User(username ='xiaoming',password = '123456')
@@ -90,7 +89,7 @@ def register(request):
         if user:
             result = '用户已存在'
         else:
-            models.user_info.objects.create(username=username, password=password,enterprise_name=enterprise_name,permission=permission)
+            models.user_info.objects.create(username=username, password=password,enterprise_name=enterprise_name,permission="E")
             result = '注册成功'
     #except:
         #pass
